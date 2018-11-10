@@ -410,6 +410,7 @@ void Foam::electrostaticModel::correct()
         ks_*kq_             //MR (10/17/2018) Changed the particle charging model to Laurentie
     );
 
+    /*
     const scalar Eq_max_sqr = sqr(eq_max_.value());
 
     forAll(Eq_, celli)
@@ -425,6 +426,7 @@ void Foam::electrostaticModel::correct()
             kPb_[celli] = ((Eq_sqr/Eq_max_sqr)-1.0)*breakdown_efficiency_.value();
         }
     }
+    */
 
 
     dimensionedScalar cq_k2
@@ -586,6 +588,7 @@ void Foam::electrostaticModel::correct()
         max(varRhoqMin, varRhoq_)
     );
 
+    /*
     // Compute flux of charge
     q_flux_ = (fvc::reconstruct(alphaRhoPhi_))*rhoq_
             + (alpha_*rho_*(cq_g+(cq_g*cq4)))*rhoq_*g_
@@ -602,7 +605,7 @@ void Foam::electrostaticModel::correct()
 
     // Compute diffusivity of rhoq alone
     diffusivity = alpha_*rho_*((cq3+(cq3*cq4))+cq6);
-
+    */
     // Solve for charge density
     fvScalarMatrix rhoqEqn
     (
