@@ -297,7 +297,6 @@ void Foam::chargeGenerationWallFvPatchScalarField::updateCoeffs()
     scalarField qWall
     (
         ((Kw1*saturatedRhoq_.value())+(Kw2*EqWallNormal)+(qfluxWallNormal)-(cRhoq*rhoqCell))/(Kw1 - cRhoq)
-        //saturatedRhoq_.value()*min(max((scalar(1.0) - Eqfactor + qfluxFactor),0.0),1.0)
     );
 
     forAll(qWall, facei)
@@ -309,39 +308,6 @@ void Foam::chargeGenerationWallFvPatchScalarField::updateCoeffs()
     }
 
     qWall = min(max(qWall,saturatedRhoq_.value()),0.0);
-
-    /*
-    Pout << "kqs: " << kqs_.value() << endl;
-
-    Pout << "Eq max value: " << max(mag(EqsPatchField)) << endl;
-
-    Pout << "Eq min value: " << min(mag(EqsPatchField)) << endl;
-
-    Pout << "Eq factor max value: " << max(Kw2*EqWallNormal/(Kw1 - cRhoq)) << endl;
-
-    Pout << "Eq factor min value: " << min(Kw2*EqWallNormal/(Kw1 - cRhoq)) << endl;
-
-    Pout << "Qflux factor max value: " << max(qfluxWallNormal/(Kw1 - cRhoq)) << endl;
-
-    Pout << "Qflux factor min value: " << min(qfluxWallNormal/(Kw1 - cRhoq)) << endl;
-
-    Pout << "Wall charge max value: " << max(qWall) << endl;
-
-    Pout << "Wall charge min value: " << min(qWall) << endl;
-
-    Pout << "qfluxWall max value: " << max(mag(qfluxNoRhoqPatchField)) << endl;
-
-    Pout << "qfluxWall min value: " << min(mag(qfluxNoRhoqPatchField)) << endl;
-
-    Pout << "Kw1 max " << max(Kw1) << endl;
-
-    Pout << "Kw1 min " << min(Kw1) << endl;
-
-    Pout << "cRhoq max " << max(cRhoq) << endl;
-
-    Pout << "cRhoq min " << min(cRhoq) << endl;
-
-    */
 
     operator==(qWall);
 
