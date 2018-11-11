@@ -162,7 +162,7 @@ class electrostaticModel
         volVectorField cq_;
 
         //- Correlation coefficient
-        volScalarField rhoPearson;
+        volScalarField rhoPearson_;
 
         //- Electrostatic force acting on the particle phase
         volVectorField Fq_;
