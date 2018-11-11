@@ -268,14 +268,14 @@ Foam::electrostaticModel::electrostaticModel
         dimensionedVector("dimCQ", dimensionSet(0,-2,0,0,0,1,0), Zero)
     ),
 
-    rhoPearson
+    rhoPearson_
     (
         IOobject
         (
             "PearsonCorrelation",
             alpha_.time().timeName(),
             alpha_.mesh(),
-            IOobject::NO_READ,
+            IOobject::READ_IF_PRESENT,
             IOobject::AUTO_WRITE
         ),
         alpha_.mesh(),
@@ -367,10 +367,20 @@ void Foam::electrostaticModel::correct()
         "thetaMin",dimensionSet(0,2,-2,0,0,0,0),scalar(1.0e-10)
     );
 
+    volScalarField rhoPearson
+    (
+        min(rhoPearson_, scalar(0.9))
+    );
+
+    Info << "Pearson correlation: " << max(rhoPearson).value() << endl;
+
+    // 11/10/2018 MR - Added effect of correlation on theta
     // Limiting lowest value of theta to thetaMin
     volScalarField theta
     (
-        max(theta_, thetaMin)
+        max(theta_*(1.0-(rhoPearson*rhoPearson))*
+        (3.0-(rhoPearson*rhoPearson))
+        /3.0,thetaMin)
     );
 
     // Compute mixture relative permittivity
@@ -410,7 +420,11 @@ void Foam::electrostaticModel::correct()
         ks_*kq_             //MR (10/17/2018) Changed the particle charging model to Laurentie
     );
 
-    /*
+    dimensionedScalar cq_k2
+    (
+        ks_*chargingEfficiencyParticle_*vacuumPermittivity_
+    );
+
     const scalar Eq_max_sqr = sqr(eq_max_.value());
 
     forAll(Eq_, celli)
@@ -426,21 +440,6 @@ void Foam::electrostaticModel::correct()
             kPb_[celli] = ((Eq_sqr/Eq_max_sqr)-1.0)*breakdown_efficiency_.value();
         }
     }
-    */
-
-
-    dimensionedScalar cq_k2
-    (
-        ks_*chargingEfficiencyParticle_*vacuumPermittivity_
-    );
-
-
-    /*
-    volScalarField cq_k2
-    (
-        ks_*kPb_*vacuumPermittivity_
-    );
-    */
 
     volScalarField thetaPow0_9
     (
@@ -588,14 +587,6 @@ void Foam::electrostaticModel::correct()
         max(varRhoqMin, varRhoq_)
     );
 
-    /*
-    // Compute flux of charge
-    q_flux_ = (fvc::reconstruct(alphaRhoPhi_))*rhoq_
-            + (alpha_*rho_*(cq_g+(cq_g*cq4)))*rhoq_*g_
-            - (alpha_*rho_*(-cq1-(cq1*cq4)+cq5+cq7+(cq7*cq4)))*fvc::grad(Vq_)
-            - (alpha_*rho_*(cq3+(cq3*cq4)+cq6))*fvc::grad(rhoq_)
-            + (alpha_*rho_*cq6*(rhoq_/varRhoq)*fvc::grad(varRhoq_));
-
     // Compute flux of charge without contribution of gradient of rhoq
     q_flux_no_rhoq =
             (fvc::reconstruct(alphaRhoPhi_))*rhoq_
@@ -605,7 +596,7 @@ void Foam::electrostaticModel::correct()
 
     // Compute diffusivity of rhoq alone
     diffusivity = alpha_*rho_*((cq3+(cq3*cq4))+cq6);
-    */
+
     // Solve for charge density
     fvScalarMatrix rhoqEqn
     (
@@ -644,7 +635,7 @@ void Foam::electrostaticModel::correct()
     Fq_ = rhoq_*alpha_*Eq_;
 
     // Compute Pearson correlation coefficient
-    rhoPearson = mag(cq_)/sqrt(theta*varRhoq);
+    rhoPearson_ = mag(cq_)/sqrt(theta*varRhoq);
 
     Info << "Electric potential: min(Vq) = " << min(Vq_).value()
          << " - max(Vq) = " << max(Vq_).value() << endl;
