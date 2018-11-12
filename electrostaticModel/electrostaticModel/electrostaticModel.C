@@ -367,20 +367,9 @@ void Foam::electrostaticModel::correct()
         "thetaMin",dimensionSet(0,2,-2,0,0,0,0),scalar(1.0e-10)
     );
 
-    volScalarField rhoPearson
-    (
-        min(rhoPearson_, scalar(0.9))
-    );
-
-    Info << "Pearson correlation: " << max(rhoPearson).value() << endl;
-
-    // 11/10/2018 MR - Added effect of correlation on theta
-    // Limiting lowest value of theta to thetaMin
     volScalarField theta
     (
-        max(theta_*(1.0-(rhoPearson*rhoPearson))*
-        (3.0-(rhoPearson*rhoPearson))
-        /3.0,thetaMin)
+        max(theta_,thetaMin)
     );
 
     // Compute mixture relative permittivity
@@ -427,17 +416,20 @@ void Foam::electrostaticModel::correct()
 
     const scalar Eq_max_sqr = sqr(eq_max_.value());
 
-    forAll(Eq_, celli)
+    if(max(mag(Eq_)).value() > eq_max_.value())
     {
-        const scalar Eq_sqr = magSqr(Eq_[celli]);
+        forAll(Eq_, celli)
+        {
+            const scalar Eq_sqr = magSqr(Eq_[celli]);
 
-        if(Eq_sqr < Eq_max_sqr)
-        {
-            kPb_[celli] = 0.0;
-        }
-        else
-        {
-            kPb_[celli] = ((Eq_sqr/Eq_max_sqr)-1.0)*breakdown_efficiency_.value();
+            if(Eq_sqr < Eq_max_sqr)
+            {
+                kPb_[celli] = 0.0;
+            }
+            else
+            {
+                kPb_[celli] = ((Eq_sqr/Eq_max_sqr)-1.0)*breakdown_efficiency_.value();
+            }
         }
     }
 
@@ -626,11 +618,6 @@ void Foam::electrostaticModel::correct()
          << " - average = " << sum(alpha_*rhoq_).value()/sum(alpha_).value()
          << endl;
 
-    Info << "varRhoq: min = " << min(varRhoq_).value()
-         << " - max = " << max(varRhoq_).value()
-         << " - average = " << sum(alpha_*varRhoq_).value()/sum(alpha_).value()
-         << endl;
-
     // Compute electric force acting on the particle phase (per unit volume)
     Fq_ = rhoq_*alpha_*Eq_;
 
@@ -643,11 +630,6 @@ void Foam::electrostaticModel::correct()
     Info << "Electrostatic field magnitude: " << max(mag(Eq_)).value() << endl;
 
     Info << "Electrostatic force magnitude: " << max(mag(Fq_)).value() << endl;
-
-    Info << "Breakdown efficiency: " << max(mag(kPb_)).value() << endl;
-
-    Info << "Electric potential energy density: min(PE) = " << min(PE_).value()
-         << " - max(PE) = " << max(PE_).value() << endl;
 
 }
 
