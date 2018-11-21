@@ -145,14 +145,6 @@ Foam::electrostaticModel::electrostaticModel
         turbulenceParticleProperties_.subDict("RAS").
         subDict("kineticTheoryCoeffs").lookup("e")
     ),
-    eq_max_
-    (
-        electrostaticProperties_.lookup("breakdownFieldStrength")
-    ),
-    breakdown_efficiency_
-    (
-        electrostaticProperties_.lookup("breakdownChargingEfficiency")
-    ),
     g_
     (
         alpha_.mesh().lookupObject<uniformDimensionedVectorField>("g")
@@ -320,20 +312,6 @@ Foam::electrostaticModel::electrostaticModel
         ),
         alpha_.mesh(),
         dimensionedScalar("zero", dimless, 1.0)
-    ),
-
-    kPb_
-    (
-        IOobject
-        (
-            "ElectricalConductEfficiency",
-            alpha_.time().timeName(),
-            alpha_.mesh(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        alpha_.mesh(),
-        dimensionedScalar("dimkPb", dimensionSet(0,0,-1,0,0,0,0) , Zero)
     )
 
 {}
@@ -413,25 +391,6 @@ void Foam::electrostaticModel::correct()
     (
         ks_*chargingEfficiencyParticle_*vacuumPermittivity_
     );
-
-    const scalar Eq_max_sqr = sqr(eq_max_.value());
-
-    if(max(mag(Eq_)).value() > eq_max_.value())
-    {
-        forAll(Eq_, celli)
-        {
-            const scalar Eq_sqr = magSqr(Eq_[celli]);
-
-            if(Eq_sqr < Eq_max_sqr)
-            {
-                kPb_[celli] = 0.0;
-            }
-            else
-            {
-                kPb_[celli] = ((Eq_sqr/Eq_max_sqr)-1.0)*breakdown_efficiency_.value();
-            }
-        }
-    }
 
     volScalarField thetaPow0_9
     (
@@ -602,7 +561,6 @@ void Foam::electrostaticModel::correct()
       - fvc::laplacian(alpha_*rho_*(-cq1-(cq1*cq4)+cq5+cq7+(cq7*cq4)), Vq_)
       - fvm::laplacian(alpha*rho_*((cq3+(cq3*cq4))+cq6),rhoq_)
       + fvc::laplacian(alpha*rho_*cq6*rhoq_/varRhoq, varRhoq_)
-      + (kPb_*alpha_*rho_*rhoq_)
       - fvm::Sp(phase_.continuityError(), rhoq_)
     );
 

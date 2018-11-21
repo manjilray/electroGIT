@@ -129,12 +129,6 @@ class electrostaticModel
         //Coefficient of restitution
         const dimensionedScalar e_;
 
-        //- Breakdown electric potential
-        const dimensionedScalar eq_max_;
-
-        //- Charging efficiency at breakdown
-        const dimensionedScalar breakdown_efficiency_;
-
         const uniformDimensionedVectorField g_;
 
         //- Electric potential
@@ -172,9 +166,6 @@ class electrostaticModel
 
         //- Mixture relative electrical permittivity
         volScalarField mixtureRelPermittivity_;
-
-        //- Electrical conductivity efficiency
-        volScalarField kPb_;
 
     // Private Member Functions
 
