@@ -132,9 +132,6 @@ class chargeGenerationWallFvPatchScalarField
     const dimensionedScalar kqs_;
     const dimensionedScalar kqe_;
 
-    //- Breakdown electric potential
-    const dimensionedScalar eq_max_;
-
     // Electric field at the wall boundary
     //const fvPatchVectorField& EqsPatchField;
 

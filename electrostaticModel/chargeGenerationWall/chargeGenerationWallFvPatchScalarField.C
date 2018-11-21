@@ -141,10 +141,6 @@ chargeGenerationWallFvPatchScalarField
         ((5.0/7.0)*tgamma(12.0/5.0)/pow(2.0,1.0/10.0)/
          pow(constant::mathematical::pi,0.5))
         *ks_*chargingEfficiencyWall_*vacuumPermittivity_
-    ),
-    eq_max_
-    (
-        electrostaticProperties_.lookup("breakdownFieldStrength")
     )
 
 {
@@ -298,14 +294,6 @@ void Foam::chargeGenerationWallFvPatchScalarField::updateCoeffs()
     (
         ((Kw1*saturatedRhoq_.value())+(Kw2*EqWallNormal)+(qfluxWallNormal)-(cRhoq*rhoqCell))/(Kw1 - cRhoq)
     );
-
-    forAll(qWall, facei)
-    {
-        if(EqWallNormal[facei] > eq_max_.value())
-        {
-            qWall[facei] = rhoqCell[facei];
-        }
-    }
 
     qWall = min(max(qWall,saturatedRhoq_.value()),0.0);
 
